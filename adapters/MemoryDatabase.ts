@@ -1,61 +1,41 @@
-import { Cursor, CursorType, Database, Filter, Query, Sort } from "../types.ts";
+import { AbstractDatabase, Indexes, RawDocument } from '../types.ts'
 
-export class MemoryCursor<T> implements Cursor<T> {
-  _type(): T { throw new Error('Not intended to be called, for typing only'); }
-
-  constructor(private data: T[]) {}
-
-  filter<TOut>(filter: Filter<TOut>): MemoryCursor<TOut> {
-    return new MemoryCursor<TOut>((this.data as unknown[]).filter(filter))
-  }
-  query(query: Query<T>): MemoryCursor<T> {
-    return new MemoryCursor<T>(this.data.map(p => ({ key: query[1](p), value: p})).filter(p => p.key === query[0]).map(p => p.value))
-  }
-  sort(sort: Sort<T>): MemoryCursor<T> {
-    return new MemoryCursor<T>(this.data.concat().sort((a, b): number => {
-      const sortKeyA = sort[1](a)
-      const sortKeyB = sort[1](b)
-
-      if (sortKeyA > sortKeyB) {
-        return sort[0] === 'asc' ? -1 : 1
-      }
-
-      if (sortKeyB > sortKeyA) {
-        return sort[0] === 'desc' ? 1 : -1
-      }
-
-      return 0
-    }))
-  }
-  fetch() {
-    return this.data.concat()
-  }
-}
-// deno-lint-ignore no-explicit-any
-export class MemoryDatabase implements Database<MemoryCursor<any>> {
-
+export class MemoryDatabase extends AbstractDatabase {
   constructor(
-    private data: unknown[]
-  ) { }
+    private data: { value: unknown, id: string }[]
+  ) {
+    super()
+  }
+  
+  protected rawQuery(filter: { [key: string]: string | { gt: string | number; } | { lt: string | number; } | { gt: string | number; lt: string | number; }; }): RawDocument[] | Promise<RawDocument[]> {
+    return this.data.concat([]) 
+  }
+  protected rawInsert(documents: { value: unknown; indexes: { [key: string]: string; }; }[]): string[] | Promise<string[]> {
+    return documents.map(doc => {
+      const id = this.data.length + ''
 
-  source<T>(filter: Filter<T>): MemoryCursor<T> {
-    return new MemoryCursor(this.data).filter(filter)
-  }
-  query<T>(cursor: MemoryCursor<T>, query: Query<T>): MemoryCursor<T> {
-    return cursor.query(query)
-  }
-  sort<T>(cursor: MemoryCursor<T>, sort: Sort<T>): MemoryCursor<T> {
-    return cursor.sort(sort)
-  }
+      this.data.push({ ...doc, id })
 
-  insert<T>(document: T): void | Promise<void> {
-    this.data.push(document)
+      return id
+    })
   }
-  redact<T>(cursor: CursorType<MemoryCursor<any>, T>): void | Promise<void> {
+  protected rawUpdateIndexValues(indexUpdates: { [id: string]: Indexes; }): void | Promise<void> {
     throw new Error('Method not implemented.');
   }
-  fetch<T>(cursor: MemoryCursor<T>): T[] {
-    return cursor.fetch()
+  protected rawEnsureIndex(indexFieldNames: string[]): void | Promise<void> {
+    throw new Error('Method not implemented.');
   }
+  protected rawRedact(ids: string[]): void | Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
 }
 
+const test = async () => {
+  const db = new MemoryDatabase([])
+
+  await db.insertDocuments([{ a: 1 }, { b: 1 }])
+  console.log(await db.getCursor().filterByType(Object).filterByKey('b', (a) => Object.keys(a)[0]).map(a => Object.keys(a)).fetch()) 
+}
+
+test()
