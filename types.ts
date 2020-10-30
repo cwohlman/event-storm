@@ -12,7 +12,7 @@ export interface StandardCursor<T> {
 
   filterByKey(key: string, map: (a: T) => string): StandardCursor<T>;
 
-  filterByRange(range: Range, map: (a: T) => string): StandardCursor<T>;
+  filterByRange(range: Range, map: (a: T) => string | number): StandardCursor<T>;
 
   sortByKey(
     direction: "asc" | "desc",

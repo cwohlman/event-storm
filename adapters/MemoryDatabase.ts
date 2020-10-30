@@ -30,12 +30,3 @@ export class MemoryDatabase extends AbstractDatabase {
   }
 
 }
-
-const test = async () => {
-  const db = new MemoryDatabase([])
-
-  await db.insertDocuments([{ a: 1 }, { b: 1 }])
-  console.log(await db.getCursor().filterByType(Object).filterByKey('b', (a) => Object.keys(a)[0]).map(a => Object.keys(a)).fetch()) 
-}
-
-test()
