@@ -172,12 +172,64 @@ export abstract class AbstractDatabase {
   }
 
   async insertDocuments(documents: unknown[]): Promise<void> {
-    const rawDocuments = documents.map((doc) => ({
-      value: this.serializer.serialize(doc),
-      indexes: {},
-    }));
+    const rawDocuments = documents.map((doc) => {
+      const serializedDocument = this.serializer.serialize(doc);
+      return ({
+        value: serializedDocument,
+        indexes: this.getIndexes(doc),
+      });
+    });
 
     await this.rawInsert(rawDocuments);
+  }
+
+  getIndexes(document: unknown): Indexes {
+    const constructorName = document && typeof document === "object" &&
+      (document as { $ctor?: unknown }).$ctor;
+    if (typeof constructorName === "string") {
+      return { $ctor: constructorName };
+    }
+
+    return {};
+  }
+
+  registerType<T extends object>(
+    name: string,
+    Type: { new (...args: any[]): T },
+    serialize?: (instance: T) => object,
+    parse?: (value: object) => T,
+  ) {
+    this.serializer.registerType(name, Type, serialize, parse);
+  }
+
+  queryHints: {
+    [name: string]: {
+      Type: { new (...args: any[]): any } | null;
+      mapFn: (doc: any) => string | number | null;
+    };
+  } = {};
+  registerQueryHint(
+    name: string,
+    Type: null,
+    mapFn: (doc: unknown) => string | number | null,
+  ): void;
+
+  registerQueryHint<T>(
+    name: string,
+    Type: { new (...args: any[]): T },
+    mapFn: (doc: T) => string | number | null,
+  ): void;
+
+  registerQueryHint(
+    name: string,
+    Type: { new (...args: any[]): any } | null,
+    mapFn: (doc: any) => string | number | null,
+  ) {
+    // TODO: pre-load query hints & SHAs from the DB to avoid stepping on existing hints
+    if (this.queryHints[name]) {
+      throw new Error('A query hint with the same name is already registered')
+    }
+    this.queryHints[name] = { Type, mapFn };
   }
 
   // TODO: insertDocuments
@@ -213,7 +265,7 @@ export abstract class AbstractDatabase {
       // the user can't assign an id
       // note: the user can assign their own id
       value: unknown;
-      indexes: { [key: string]: string };
+      indexes: Indexes;
     }[],
   ): Promise<string[]> | string[];
   protected abstract rawUpdateIndexValues(
@@ -224,5 +276,3 @@ export abstract class AbstractDatabase {
   ): Promise<void> | void;
   protected abstract rawRedact(ids: string[]): Promise<void> | void;
 }
-
-
