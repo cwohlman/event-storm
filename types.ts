@@ -1,3 +1,5 @@
+import { Serializer } from "./components/Serializer.ts";
+
 export type Range = { gt: string | number } | { lt: string | number } | {
   gt: string | number;
   lt: string | number;
@@ -12,7 +14,10 @@ export interface StandardCursor<T> {
 
   filterByKey(key: string, map: (a: T) => string): StandardCursor<T>;
 
-  filterByRange(range: Range, map: (a: T) => string | number): StandardCursor<T>;
+  filterByRange(
+    range: Range,
+    map: (a: T) => string | number,
+  ): StandardCursor<T>;
 
   sortByKey(
     direction: "asc" | "desc",
@@ -43,9 +48,7 @@ export type CursorOp =
   }
   | { type: "map"; map: (a: any) => any };
 
-export class PassthroughCursor<T>
-  implements
-    StandardCursor<T> {
+export class PassthroughCursor<T> implements StandardCursor<T> {
   constructor(
     public readonly ops: CursorOp[],
     private readonly getDocuments: (
@@ -157,6 +160,8 @@ export class PassthroughCursor<T>
 
 // TODO: IDatabase
 export abstract class AbstractDatabase {
+  serializer = new Serializer();
+
   getCursor(): StandardCursor<unknown> {
     const resolve = (
       filters: FilterOp[],
@@ -167,7 +172,10 @@ export abstract class AbstractDatabase {
   }
 
   async insertDocuments(documents: unknown[]): Promise<void> {
-    const rawDocuments = documents.map((doc) => ({ value: doc, indexes: {} }));
+    const rawDocuments = documents.map((doc) => ({
+      value: this.serializer.serialize(doc),
+      indexes: {},
+    }));
 
     await this.rawInsert(rawDocuments);
   }
@@ -184,7 +192,7 @@ export abstract class AbstractDatabase {
 
     // TODO pass filter to rawQuery and only return matching filters
 
-    return (await this.rawQuery({})).map((a) => a.value);
+    return (await this.rawQuery({})).map((a) => this.serializer.parse(a.value));
   }
 
   protected chooseBestFilter(
@@ -216,3 +224,5 @@ export abstract class AbstractDatabase {
   ): Promise<void> | void;
   protected abstract rawRedact(ids: string[]): Promise<void> | void;
 }
+
+

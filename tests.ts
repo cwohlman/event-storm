@@ -7,25 +7,35 @@ import type { AbstractDatabase } from "./types.ts";
 
 class TestDocument {
   constructor(
-    public readonly name: string
+    public name: string
   ) {}
 }
 
 class OtherDocument {
   constructor(
-    public readonly whyNotMe: string
+    public whyNotMe: string
   ) {}
 }
 
 class RangeDocument {
   constructor(
-    public readonly index: number
+    public index: number
   ) {}
 }
 
-export function shouldReturnItemsByType(makeDb: () => AbstractDatabase) {
+async function setupDb(makeDb: () => AbstractDatabase | Promise<AbstractDatabase>) {
+  const db = await makeDb()
+
+  db.serializer.registerType('test', TestDocument)
+  db.serializer.registerType('other', OtherDocument)
+  db.serializer.registerType('range', RangeDocument)
+
+  return db;
+}
+
+export function shouldReturnItemsByType(makeDb: () => AbstractDatabase | Promise<AbstractDatabase>) {
   return async () => {
-    const db = makeDb()
+    const db = await setupDb(makeDb)
 
     await db.insertDocuments([new TestDocument('one')])
     await db.insertDocuments([new OtherDocument('expected test document to be fetched')])
@@ -36,9 +46,9 @@ export function shouldReturnItemsByType(makeDb: () => AbstractDatabase) {
   }
 }
 
-export function shouldReturnItemsByKey(makeDb: () => AbstractDatabase) {
+export function shouldReturnItemsByKey(makeDb: () => AbstractDatabase | Promise<AbstractDatabase>) {
   return async () => {
-    const db = makeDb()
+    const db = await setupDb(makeDb)
 
     await db.insertDocuments([new TestDocument('one')])
     await db.insertDocuments([new TestDocument('not the one expected')])
@@ -49,9 +59,9 @@ export function shouldReturnItemsByKey(makeDb: () => AbstractDatabase) {
   }
 }
 
-export function shouldReturnItemsByRange(makeDb: () => AbstractDatabase) {
+export function shouldReturnItemsByRange(makeDb: () => AbstractDatabase | Promise<AbstractDatabase>) {
   return async () => {
-    const db = makeDb()
+    const db = await setupDb(makeDb)
 
     await db.insertDocuments([new RangeDocument(1)])
     await db.insertDocuments([new RangeDocument(2)])
