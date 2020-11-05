@@ -9,6 +9,7 @@ export type Range = { gt: string | number } | { lt: string | number } | {
 
 export interface StandardCursor<T> {
   fetch(): T[] | Promise<T[]>;
+  // fetchIds(): string[] | Promise<string[]>
 
   filterByType<T>(Type: { new (...args: any[]): T }): StandardCursor<T>;
 

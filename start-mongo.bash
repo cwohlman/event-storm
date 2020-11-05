@@ -1,1 +1,1 @@
-docker run --name event-storm-test-mongo -p 127.0.0.1:3017:27017 -d mongo:4.4.1-bionic
+docker start event-storm-test-mongo || docker run --name event-storm-test-mongo -p 127.0.0.1:3017:27017 -d mongo:4.4.1-bionic

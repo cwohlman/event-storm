@@ -17,6 +17,9 @@ export class MongoDatabase extends AbstractDatabase {
     this._client.connectWithUri(connectionString);
     this._db = this._client.database(dbName);
     this._collection = this._db.collection<RawDocument>(collectionName);
+
+    // Not implemented:
+    // this._collection.createIndexes([{ keys: { "indexes.$ctor": 1 }}])
   }
   
   protected async rawQuery(filter: { [key: string]: string | { gt: string | number; } | { lt: string | number; } | { gt: string | number; lt: string | number; }; }): Promise<RawDocument[]> {
