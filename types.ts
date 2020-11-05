@@ -26,6 +26,9 @@ export interface StandardCursor<T> {
   ): StandardCursor<T>;
 
   map<TOut>(map: (a: T) => TOut): StandardCursor<TOut>;
+
+  // TODO: for hydrating with e.g. blobs
+  // hydrate<TOut>(map: (a: T) => Promise<TOut>): StandardCursor<TOut>;
 }
 
 // TODO: ordered set operations
