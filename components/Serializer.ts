@@ -11,7 +11,11 @@ export class Serializer {
       );
     }
 
-    if (typeof doc === 'object' && doc.constructor !== Object && doc.constructor !== Array) {
+    if (typeof doc === 'object' && doc instanceof Array) {
+      return doc.map(value => this.serialize(value))
+    }
+
+    if (typeof doc === 'object' && doc.constructor !== Object) {
       throw new Error(`Constructor ${doc.constructor.name} is not registered.`)
     }
     // TODO: exhaustive typeof check for security
@@ -46,6 +50,10 @@ export class Serializer {
       const docAsInstance = raw as { $ctor?: string };
       if (typeof docAsInstance.$ctor === "string") {
         return this.createInstance(docAsInstance.$ctor, docAsInstance);
+      }
+
+      if (raw instanceof Array) {
+        return raw.map(item => this.parse(item))
       }
 
       return this.parseProperties(raw);

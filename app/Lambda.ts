@@ -22,6 +22,7 @@ export function lambda(endpoint: Endpoint, serializer: Serializer = new Serializ
     try {
       const result = await endpoint.processRequest(body)
       const serializedResult = serializer.serialize(result)
+
       request.respond({ body: JSON.stringify(serializedResult), status: 200 })
       return
     } catch (error) {
