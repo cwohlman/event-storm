@@ -22,3 +22,15 @@ Deno.test('Serializer - should round trip a prototype', () => {
   assertEquals(Object.keys(input), [], 'Serializer should not pollute prototype of example class')
   assertEquals(Object.keys(parsed), [], 'Serializer should not emit extraneous keys in parsed output')
 })
+
+Deno.test('Serializer - should support array', () => {
+  const serializer = new Serializer()
+
+  assertEquals(serializer.parse(serializer.serialize([])), [])
+})
+
+Deno.test('Serializer - plain object round trip', () => {
+  const serializer = new Serializer()
+
+  assertEquals(serializer.parse(serializer.serialize([{ foo: { bar: 'baz' }}])), [{ foo: { bar: 'baz' }}])
+})

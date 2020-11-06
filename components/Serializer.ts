@@ -11,7 +11,7 @@ export class Serializer {
       );
     }
 
-    if (typeof doc === 'object' && doc.constructor !== Object) {
+    if (typeof doc === 'object' && doc.constructor !== Object && doc.constructor !== Array) {
       throw new Error(`Constructor ${doc.constructor.name} is not registered.`)
     }
     // TODO: exhaustive typeof check for security
