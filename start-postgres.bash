@@ -1,0 +1,1 @@
+docker start event-storm-test-postgres || docker run --name event-storm-test-postgres -p 127.0.0.1:3018:5432 -e POSTGRES_PASSWORD=postgrespassword -d postgres
