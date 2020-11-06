@@ -1,4 +1,6 @@
-import { Application, Endpoint, Handler } from "./app/Application.ts";
+import { Application } from "./app/Application.ts";
+import { Endpoint } from "./app/Endpoint.ts";
+import { Handler } from "./app/Handler.ts";
 
 const app = new Application();
 

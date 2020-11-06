@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "https://deno.land/std@0.75.0/testing/asserts.ts"
-import { Handler } from "./Application.ts"
+import { Handler } from "./Handler.ts"
 
 Deno.test('Handler - should execute every step in the pipeline', async () => {
   let didCallA = false;
